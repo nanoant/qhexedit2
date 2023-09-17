@@ -10,6 +10,7 @@
 #include <QFontDialog>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QStyle>
 
 #include "mainwindow.h"
 
@@ -18,6 +19,9 @@
 /*****************************************************************************/
 MainWindow::MainWindow()
 {
+#ifndef Q_OS_MACOS
+    setUnifiedTitleAndToolBarOnMac(true);
+#endif
     setAcceptDrops( true );
     init();
     setCurrentFile("");
@@ -148,7 +152,7 @@ void MainWindow::saveToReadableFile()
 
 void MainWindow::setAddress(qint64 address)
 {
-    lbAddress->setText(QString("%1").arg(address, 1, 16));
+    lbAddress->setText(QString("%1").arg(address, 1, 16).toUpper());
 }
 
 void MainWindow::setOverwriteMode(bool mode)
@@ -204,12 +208,14 @@ void MainWindow::init()
 
 void MainWindow::createActions()
 {
-    openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
+    QStyle *style = qApp->style();
+
+    openAct = new QAction(style->standardIcon(QStyle::SP_DialogOpenButton), tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-    saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
+    saveAct = new QAction(style->standardIcon(QStyle::SP_DialogSaveButton), tr("&Save"), this);
     saveAct->setShortcuts(QKeySequence::Save);
     saveAct->setStatusTip(tr("Save the document to disk"));
     connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
@@ -228,11 +234,11 @@ void MainWindow::createActions()
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
 
-    undoAct = new QAction(QIcon(":/images/undo.png"), tr("&Undo"), this);
+    undoAct = new QAction(style->standardIcon(QStyle::SP_ArrowBack), tr("&Undo"), this);
     undoAct->setShortcuts(QKeySequence::Undo);
     connect(undoAct, SIGNAL(triggered()), hexEdit, SLOT(undo()));
 
-    redoAct = new QAction(QIcon(":/images/redo.png"), tr("&Redo"), this);
+    redoAct = new QAction(style->standardIcon(QStyle::SP_ArrowForward), tr("&Redo"), this);
     redoAct->setShortcuts(QKeySequence::Redo);
     connect(redoAct, SIGNAL(triggered()), hexEdit, SLOT(redo()));
 
@@ -248,7 +254,7 @@ void MainWindow::createActions()
     aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
     connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
-    findAct = new QAction(QIcon(":/images/find.png"), tr("&Find/Replace"), this);
+    findAct = new QAction(style->standardIcon(QStyle::SP_FileDialogContentsView), tr("&Find/Replace"), this);
     findAct->setShortcuts(QKeySequence::Find);
     findAct->setStatusTip(tr("Show the Dialog for finding and replacing"));
     connect(findAct, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
@@ -335,6 +341,10 @@ void MainWindow::createToolBars()
     editToolBar->addAction(undoAct);
     editToolBar->addAction(redoAct);
     editToolBar->addAction(findAct);
+#ifdef Q_OS_MACOS
+    fileToolBar->setIconSize(QSize(16, 16));
+    editToolBar->setIconSize(QSize(16, 16));
+#endif
 }
 
 void MainWindow::loadFile(const QString &fileName)
@@ -415,9 +425,17 @@ void MainWindow::setCurrentFile(const QString &fileName)
     isUntitled = fileName.isEmpty();
     setWindowModified(false);
     if (fileName.isEmpty())
+#ifndef Q_OS_MACOS
         setWindowFilePath("QHexEdit");
+#else
+        setWindowFilePath(tr("Untitled"));
+#endif
     else
+#ifndef Q_OS_MACOS
         setWindowFilePath(curFile + " - QHexEdit");
+#else
+        setWindowFilePath(curFile);
+#endif
 }
 
 QString MainWindow::strippedName(const QString &fullFileName)

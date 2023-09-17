@@ -43,3 +43,10 @@ TRANSLATIONS += \
     translations/qhexedit_de.ts
 
 DEFINES += QHEXEDIT_EXPORTS
+
+macx {
+    QMAKE_APPLICATION_BUNDLE_NAME = QHexEdit
+    ICON = images/QHexEdit.icns
+    QMAKE_POST_LINK += plutil -replace CFBundleName -string QHexEdit QHexEdit.app/Contents/Info.plist;
+    QMAKE_POST_LINK += plutil -replace CFBundleDocumentTypes -json '\'[{\"CFBundleTypeExtensions\":[\"bin\"],\"CFBundleTypeRole\":\"Editor\"}]\'' QHexEdit.app/Contents/Info.plist;
+}
